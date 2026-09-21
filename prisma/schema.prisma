@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 개별 찬양곡. 한 곡은 한 번만 등록되고, 여러 콘티(Setlist)에서 반복 참조된다.
+model Song {
+  id        String   @id @default(cuid())
+  titleKo   String   // 곡 제목 (한글 표기 기준으로 통일)
+  titleEn   String?  // 영문 제목 있으면 저장 (매칭 보조용)
+  tempo     String   // "HIGH" | "MID_HIGH" | "MID" | "LOW"
+  mood      String?  // 자유 카테고리 (예: "엠비언트", "경쾌") - 유튜브 분석 자동 설정 또는 수동 설정
+  roleTag   String?  // 라이브러리에서 횟수 대신 보여줄 이름(예: "입례곡", "공동체 고백송", "축복송"), null이면 횟수 표시
+  createdAt DateTime @default(now())
+
+  setlistSongs       SetlistSong[]
+  entranceForYears   MinistryYear[] @relation("EntranceSong")
+  confessionForYears MinistryYear[] @relation("ConfessionSong")
+
+  @@unique([titleKo])
+  @@index([tempo])
+}
+
+// 8월~7월을 한 사역년도로 보고, 그 기간 동안 고정으로 쓰는 입례곡/공동체 고백송을 저장
+model MinistryYear {
+  id               String   @id @default(cuid())
+  label            String   @unique // 예: "2026-2027" (2026년 8월 ~ 2027년 7월)
+  startYear        Int      // 2026
+  entranceSongId   String?
+  confessionSongId String?
+  entranceSong     Song?    @relation("EntranceSong", fields: [entranceSongId], references: [id], onDelete: SetNull)
+  confessionSong   Song?    @relation("ConfessionSong", fields: [confessionSongId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// 매주 업로드되는 콘티 한 건
+model Setlist {
+  id        String   @id @default(cuid())
+  date      DateTime? // 콘티에 날짜가 적혀 있으면 파싱해서 저장, 없으면 null
+  title     String?   // 예: "9월 3주차 청년부 찬양"
+  rawText   String?   // 원본 텍스트 (직접 입력했거나 OCR로 뽑아낸 텍스트)
+  fileUrl   String?   // R2에 올린 원본 PDF/이미지 URL
+  createdAt DateTime  @default(now())
+
+  songs SetlistSong[]
+
+  @@index([date])
+}
+
+// 콘티와 곡의 다대다 연결 (콘티 내 순서 포함)
+model SetlistSong {
+  id         String  @id @default(cuid())
+  setlistId  String
+  songId     String
+  order      Int     // 콘티 내에서 몇 번째 곡인지
+  pageNumber Int?    // 원본 파일(fileUrl)에서 이 곡이 시작하는 페이지(1-indexed), 없으면 null
+
+  setlist Setlist @relation(fields: [setlistId], references: [id], onDelete: Cascade)
+  song    Song    @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([setlistId, songId])
+  @@index([songId])
+}

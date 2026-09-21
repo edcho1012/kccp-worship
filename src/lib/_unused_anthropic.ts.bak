@@ -1,0 +1,93 @@
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const MODEL = "claude-sonnet-4-6";
+
+/**
+ * JSON 코드블록이나 잡텍스트가 섞여 와도 안전하게 파싱
+ */
+function parseJson<T>(text: string): T {
+  const cleaned = text.replace(/```json|```/g, "").trim();
+  return JSON.parse(cleaned);
+}
+
+export type ExtractedSetlist = {
+  date: string | null; // "YYYY-MM-DD" 또는 null
+  title: string | null;
+  songs: string[]; // 콘티에 등장한 순서대로
+};
+
+/**
+ * 콘티 원본(텍스트 또는 이미지/PDF)에서 날짜, 제목, 곡 목록을 추출한다.
+ * - input이 string이면 텍스트 직접 입력 케이스
+ * - input이 { base64, mediaType }이면 파일 업로드 케이스 (이미지/PDF)
+ */
+export async function extractSetlist(
+  input: string | { base64: string; mediaType: "application/pdf" | "image/png" | "image/jpeg" }
+): Promise<ExtractedSetlist> {
+  const instruction = `너는 교회 찬양팀 콘티를 분석하는 도우미야. 아래 콘티에서 다음을 JSON으로만 추출해줘.
+다른 설명이나 마크다운 없이 순수 JSON만 응답해:
+{
+  "date": "콘티에 날짜가 명시되어 있으면 YYYY-MM-DD, 없으면 null",
+  "title": "콘티 제목이나 모임 이름이 적혀 있으면 그 문자열, 없으면 null",
+  "songs": ["콘티에 나온 순서대로 곡 제목들"]
+}
+곡 제목은 콘티에 적힌 표기를 최대한 그대로 사용해. 코드, 키, 비트 같은 부가 정보는 제외하고 곡 제목만 담아.`;
+
+  const content: Anthropic.MessageCreateParams["messages"][0]["content"] =
+    typeof input === "string"
+      ? [{ type: "text", text: `${instruction}\n\n---콘티 원문---\n${input}` }]
+      : [
+          {
+            type: input.mediaType === "application/pdf" ? "document" : "image",
+            source: { type: "base64", media_type: input.mediaType, data: input.base64 },
+          } as any,
+          { type: "text", text: instruction },
+        ];
+
+  const res = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1000,
+    messages: [{ role: "user", content }],
+  });
+
+  const textBlock = res.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") throw new Error("Claude가 텍스트를 반환하지 않았어요");
+
+  return parseJson<ExtractedSetlist>(textBlock.text);
+}
+
+export type SongCategory = {
+  worshipType: "WORSHIP" | "PRAISE";
+  tempo: "SLOW" | "FAST";
+};
+
+/**
+ * 새로 등장한 곡 제목을 경배/찬양, 빠른곡/느린곡으로 자동 분류.
+ * 여러 곡을 한 번에 넘기면 API 호출을 아낄 수 있음.
+ */
+export async function categorizeSongs(titles: string[]): Promise<Record<string, SongCategory>> {
+  if (titles.length === 0) return {};
+
+  const prompt = `아래는 한국 CCM/찬양 곡 제목 목록이야. 각 곡을 다음 두 기준으로 분류해줘:
+1. worshipType: 하나님을 높이고 예배하는 조용한 성격의 "경배"(WORSHIP)인지, 신나고 선포하는 성격의 "찬양"(PRAISE)인지
+2. tempo: 곡의 전형적인 템포가 "느린곡"(SLOW)인지 "빠른곡"(FAST)인지
+
+곡 목록:
+${titles.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+
+순수 JSON 객체로만 응답해. key는 곡 제목 원문, value는 {"worshipType": "WORSHIP"|"PRAISE", "tempo": "SLOW"|"FAST"}.
+잘 모르는 곡이면 가사 분위기나 제목 뉘앙스로 최선을 다해 추정해.`;
+
+  const res = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1000,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const textBlock = res.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") throw new Error("Claude가 텍스트를 반환하지 않았어요");
+
+  return parseJson<Record<string, SongCategory>>(textBlock.text);
+}
