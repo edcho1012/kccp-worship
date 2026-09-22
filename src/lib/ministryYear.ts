@@ -45,7 +45,10 @@ export async function setMinistryYearFixedSongs(
   entranceTitle: string,
   confessionTitle: string
 ) {
-  const [entranceSong, confessionSong] = await upsertSongsInOrder([entranceTitle, confessionTitle]);
+  const [entranceSong, confessionSong] = await upsertSongsInOrder([
+    { title: entranceTitle },
+    { title: confessionTitle },
+  ]);
 
   return prisma.ministryYear.upsert({
     where: { label },
