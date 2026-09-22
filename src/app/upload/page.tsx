@@ -106,9 +106,7 @@ export default function UploadPage() {
     <div className="max-w-xl mx-auto px-6 py-12">
       <h1 className="font-serif text-2xl font-semibold mb-1">콘티 업로드</h1>
       <p className="text-sm text-ink-soft mb-8">
-        {mode === "bulk"
-          ? "여러 주 콘티가 합쳐진 파일을 올리면, 주 단위로 나눠서 한 번에 등록해줘."
-          : "이번 주 콘티를 파일이나 텍스트로 올려줘."}
+        {mode === "bulk" ? "여러 주 콘티를 한 번에 등록해." : "콘티를 올려줘."}
       </p>
 
       <div className="flex gap-2 mb-5">
@@ -150,7 +148,7 @@ export default function UploadPage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={12}
-            placeholder="콘티 내용을 그대로 붙여넣어줘. 날짜, 곡 제목 순서 그대로."
+            placeholder="콘티 내용을 붙여넣어줘."
             className="w-full border border-line rounded-xl p-4 text-sm bg-paper-raised focus:outline-none focus:ring-2 focus:ring-accent-soft focus:border-accent"
           />
         ) : (
@@ -171,11 +169,7 @@ export default function UploadPage() {
               <UploadCloud size={32} className="text-accent" strokeWidth={1.75} />
             )}
             <span className="text-sm text-ink-soft text-center px-6">
-              {file
-                ? file.name
-                : mode === "bulk"
-                ? "여러 주 콘티가 합쳐진 PDF를 끌어다 놓거나 선택해줘 (용량 커도 돼)"
-                : "PDF나 이미지 파일을 끌어다 놓거나 선택해줘"}
+              {file ? file.name : "파일을 끌어다 놓거나 선택해줘"}
             </span>
             <input
               type="file"
@@ -198,9 +192,7 @@ export default function UploadPage() {
               placeholder="https://www.youtube.com/playlist?list=..."
               className="w-full border border-line rounded-lg px-3.5 py-2.5 text-sm bg-paper-raised focus:outline-none focus:ring-2 focus:ring-accent-soft focus:border-accent"
             />
-            <p className="text-xs text-ink-soft mt-1.5">
-              이 위에 곡 몇 개가 이번 주 플레이리스트로 새로 들어온 걸 보면 곡 제목을 비교해서, Gemini가 직접 들어보고 분위기(엠비언트, 경쾌 등)를 자동으로 설정해.
-            </p>
+            <p className="text-xs text-ink-soft mt-1.5">넣으면 곡 분위기를 자동으로 분류해.</p>
           </div>
         )}
 
@@ -217,21 +209,17 @@ export default function UploadPage() {
         )}
         {phase === "processing" && (
           <p className="text-sm text-ink-soft">
-            {mode === "bulk"
-              ? "여러 주로 나눠서 분석 중이에요. 파일이 크면 몇 분 걸릴 수 있어요..."
-              : "콘티 분석 중..."}
+            {mode === "bulk" ? "분석 중... 몇 분 걸릴 수 있어." : "분석 중..."}
           </p>
         )}
-        {phase === "retrying" && (
-          <p className="text-sm text-ink-soft">서버가 잠깐 혼잡했어요. 다시 시도하는 중...</p>
-        )}
+        {phase === "retrying" && <p className="text-sm text-ink-soft">다시 시도하는 중...</p>}
 
         {bulkResult && (
           <div className="rounded-lg border border-line bg-paper-raised p-4 text-sm space-y-2">
-            <p className="font-medium">{bulkResult.createdCount}개의 주간 콘티를 찾아서 등록했어요.</p>
+            <p className="font-medium">{bulkResult.createdCount}개 콘티 등록했어.</p>
             {bulkResult.errors.length > 0 && (
               <div className="text-red-600">
-                <p className="font-medium">일부 조각은 실패했어요:</p>
+                <p className="font-medium">일부 실패:</p>
                 <ul className="list-disc list-inside">
                   {bulkResult.errors.map((e, i) => (
                     <li key={i}>{e}</li>
@@ -244,7 +232,7 @@ export default function UploadPage() {
               onClick={() => router.push("/setlists")}
               className="text-accent underline underline-offset-2"
             >
-              콘티 기록에서 확인하기
+              콘티 기록 보기
             </button>
           </div>
         )}

@@ -5,6 +5,8 @@ import { upsertSongsInOrder } from "@/lib/songs";
 import { uploadToR2 } from "@/lib/r2";
 import { fetchPlaylistVideos, matchSongToVideo } from "@/lib/youtube";
 
+export const maxDuration = 300;
+
 export async function GET() {
   const setlists = await prisma.setlist.findMany({
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],

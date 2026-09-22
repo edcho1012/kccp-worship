@@ -5,6 +5,9 @@ import { upsertCategorizedSongsInOrder } from "@/lib/songs";
 import { splitPdfIntoChunks } from "@/lib/pdfSplit";
 import { uploadToR2 } from "@/lib/r2";
 
+// Vercel Hobby 플랜 가느 최대값(5버). 조각이 녔음 대량 업녔녔녔 이 안에 다 둌렕하념듓것.
+export const maxDuration = 300;
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
