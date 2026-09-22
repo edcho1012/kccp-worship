@@ -2,6 +2,8 @@ import Link from "next/link";
 import { UploadCloud, CalendarDays, Music } from "lucide-react";
 import FixedSongsBanner from "@/components/FixedSongsBanner";
 
+export const dynamic = "force-dynamic";
+
 const tiles = [
   {
     href: "/upload",

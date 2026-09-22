@@ -3,6 +3,8 @@ import Link from "next/link";
 import { UploadCloud, FileText } from "lucide-react";
 import FixedSongsBanner from "@/components/FixedSongsBanner";
 
+export const dynamic = "force-dynamic";
+
 const tempoLabel: Record<string, string> = {
   HIGH: "High",
   MID_HIGH: "Mid-high",

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import SongsGrid from "@/components/SongsGrid";
 
+export const dynamic = "force-dynamic";
+
 export default async function SongsPage() {
   const songs = await prisma.song.findMany({
     include: { _count: { select: { setlistSongs: true } } },
