@@ -8,13 +8,14 @@ datasource db {
 
 // 개별 찬양곡. 한 곡은 한 번만 등록되고, 여러 콘티(Setlist)에서 반복 참조된다.
 model Song {
-  id        String   @id @default(cuid())
-  titleKo   String   // 곡 제목 (한글 표기 기준으로 통일)
-  titleEn   String?  // 영문 제목 있으면 저장 (매칭 보조용)
-  tempo     String   // "HIGH" | "MID_HIGH" | "MID" | "LOW"
-  mood      String?  // 자유 카테고리 (예: "엠비언트", "경쾌") - 유튜브 분석 자동 설정 또는 수동 설정
-  roleTag   String?  // 라이브러리에서 횟수 대신 보여줄 이름(예: "입례곡", "공동체 고백송", "축복송"), null이면 횟수 표시
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  titleKo    String   // 곡 제목 (한글 표기 기준으로 통일)
+  titleEn    String?  // 영문 제목 있으면 저장 (매칭 보조용)
+  tempo      String   // "HIGH" | "MID_HIGH" | "MID" | "LOW"
+  mood       String?  // 자유 카테고리 (예: "엠비언트", "경쾌") - 유튜브 분석 자동 설정 또는 수동 설정
+  musicalKey String?  // 곡 키(조성), 예: "G", "D", "Capo3 Am" - 콘티에서 추출 또는 수동 설정
+  roleTag    String?  // 라이브러리에서 횟수 대신 보여줄 이름(예: "입례곡", "공동체 고백송", "축복송"), null이면 횟수 표시
+  createdAt  DateTime @default(now())
 
   setlistSongs       SetlistSong[]
   entranceForYears   MinistryYear[] @relation("EntranceSong")

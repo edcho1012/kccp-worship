@@ -15,6 +15,7 @@ export default async function SongsPage() {
     tempo: s.tempo,
     mood: s.mood,
     roleTag: s.roleTag,
+    musicalKey: s.musicalKey,
     count: s._count.setlistSongs,
   }));
 

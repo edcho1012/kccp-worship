@@ -21,6 +21,9 @@ function SongList({ songs }: { songs: any[] }) {
           <Link href={`/songs/${ss.song.id}`} className="flex-1 hover:text-accent">
             {ss.song.titleKo}
           </Link>
+          {ss.song.musicalKey && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-ink text-white">{ss.song.musicalKey}</span>
+          )}
           <span className="text-xs px-2 py-0.5 rounded-full bg-accent-soft text-accent">
             {tempoLabel[ss.song.tempo] ?? ss.song.tempo}
           </span>

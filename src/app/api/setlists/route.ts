@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "text 또는 file 중 하나는 필요해요" }, { status: 400 });
     }
 
-    const songs = await upsertSongsInOrder(extracted.songs.map((s) => s.title));
+    const songs = await upsertSongsInOrder(extracted.songs.map((s) => ({ title: s.title, key: s.key })));
 
     // 유튜브 플레이리스트가 같이 왔으면, 곡마다 매칭되는 영상을 찾아서 분위기(mood)를 자동 설정
     // (이미 mood가 있는 곡은 건드리지 않음 - 수동으로 정해둔 걸 덮어쓰지 않으려고)

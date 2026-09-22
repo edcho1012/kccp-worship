@@ -24,6 +24,7 @@ function parseJson<T>(text: string | undefined): T {
 export type ExtractedSongRef = {
   title: string;
   page: number | null; // 원본 파일에서 이 곡이 시작하는 페이지(1-indexed). 텍스트 입력이면 항상 null
+  key: string | null; // 콘티에 적힌 곡 키/코드 표기 (예: "G", "D", "Capo3 Am"), 없으면 null
 };
 
 export type ExtractedSetlist = {
@@ -33,7 +34,7 @@ export type ExtractedSetlist = {
 };
 
 /**
- * 콘티 원본(텍스트 또는 이미지/PDF)에서 날짜, 제목, 곡 목록(+페이지 번호)을 추출한다. (한 주 분량 기준)
+ * 콘티 원본(텍스트 또는 이미지/PDF)에서 날짜, 제목, 곡 목록(+페이지 번호, +키)을 추출한다. (한 주 분량 기준)
  * - input이 string이면 텍스트 직접 입력 케이스
  * - input이 { base64, mediaType }이면 파일 업로드 케이스 (이미지/PDF)
  */
@@ -46,11 +47,15 @@ export async function extractSetlist(
   "date": "콘티에 날짜가 명시되어 있으면 YYYY-MM-DD, 없으면 null",
   "title": "콘티 제목이나 모임 이름이 적혀 있으면 그 문자열, 없으면 null",
   "songs": [
-    { "title": "곡 제목", "page": "이 곡이 시작하는 페이지 번호(1부터 시작하는 정수), 텍스트라 페이지 개념이 없으면 null" }
+    {
+      "title": "곡 제목",
+      "page": "이 곡이 시작하는 페이지 번호(1부터 시작하는 정수), 텍스트라 페이지 개념이 없으면 null",
+      "key": "콘티에 적힌 이 곡의 키/코드 표기(예: G, D, Capo3 Am, E♭), 안 적혀 있으면 null"
+    }
   ]
 }
 중요: 콘티 안에 곡이 몇 개든 절대 빠짐없이 전부 추출해. 입례곡, 공동체 고백송, 경배, 찬양, 특별순서, 통성기도곡 등 어느 섹션에 있든 콘티에 등장하는 모든 곡을 순서대로 다 포함해야 해 (한두 곡만 뽑고 끝내면 안 돼).
-곡 제목은 콘티에 적힌 표기를 최대한 그대로 사용해. 코드, 키, 비트 같은 부가 정보는 제외하고 곡 제목만 담아.`;
+곡 제목은 콘티에 적힌 표기를 최대한 그대로 사용해. 비트 같은 부가 정보는 무시하고 제목/페이지/키만 담아.`;
 
   const parts =
     typeof input === "string"
@@ -75,6 +80,7 @@ export type CategorizedSongRef = {
   title: string;
   tempo: Tempo;
   page: number | null; // 이 조각(청크) 안에서 시작하는 페이지(1-indexed)
+  key: string | null; // 콘티에 적힌 곡 키/코드 표기, 없으면 null
 };
 
 export type ExtractedMultiSetlistEntry = {
@@ -85,8 +91,8 @@ export type ExtractedMultiSetlistEntry = {
 
 /**
  * 여러 주(week)의 콘티가 한 파일(조각)에 이어 붙어 있을 수 있는 경우, 주 단위로 나눠서
- * 추출한다. 대량 업로드(과거 콘티 모음)에서 씀. 템포 분류 + 페이지 번호까지 한 번에 같이
- * 물어봐서 API 호출 수를 아낀다 (무료 할당량이 넉넉하지 않아서).
+ * 추출한다. 대량 업로드(과거 콘티 모음)에서 씀. 템포 분류 + 페이지 번호 + 키까지 한 번에
+ * 같이 물어봐서 API 호출 수를 아낀다 (무료 할당량이 넉넉하지 않아서).
  */
 export async function extractMultipleSetlists(input: {
   base64: string;
@@ -101,7 +107,8 @@ export async function extractMultipleSetlists(input: {
     {
       "title": "곡 제목",
       "tempo": "HIGH(빠르고 신나는 곡) / MID_HIGH(약간 빠른 곡) / MID(보통 속도) / LOW(느리고 잔잔한 곡) 중 하나",
-      "page": "이 파일(지금 보고 있는 조각) 안에서 이 곡이 시작하는 페이지 번호(1부터 시작하는 정수)"
+      "page": "이 파일(지금 보고 있는 조각) 안에서 이 곡이 시작하는 페이지 번호(1부터 시작하는 정수)",
+      "key": "콘티에 적힌 이 곡의 키/코드 표기(예: G, D, Capo3 Am, E♭), 안 적혀 있으면 null"
     }
   ]
 }

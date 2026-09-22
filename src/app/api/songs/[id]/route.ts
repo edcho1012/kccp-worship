@@ -28,11 +28,12 @@ const VALID_ROLE_TAGS = ["입례곡", "공동체 고백송", "축복송"];
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  const { titleKo, tempo, mood, roleTag } = body as {
+  const { titleKo, tempo, mood, roleTag, musicalKey } = body as {
     titleKo?: string;
     tempo?: string;
     mood?: string | null;
     roleTag?: string | null;
+    musicalKey?: string | null;
   };
 
   if (tempo !== undefined && !VALID_TEMPOS.includes(tempo)) {
@@ -50,6 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (tempo !== undefined) data.tempo = tempo;
   if (mood !== undefined) data.mood = mood || null;
   if (roleTag !== undefined) data.roleTag = roleTag || null;
+  if (musicalKey !== undefined) data.musicalKey = musicalKey || null;
 
   try {
     const song = await prisma.song.update({ where: { id }, data });

@@ -20,6 +20,7 @@ type Props = {
     tempo: string;
     mood: string | null;
     roleTag: string | null;
+    musicalKey: string | null;
   };
 };
 
@@ -30,6 +31,7 @@ export default function SongEditor({ song }: Props) {
   const [tempo, setTempo] = useState(song.tempo);
   const [mood, setMood] = useState(song.mood ?? "");
   const [roleTag, setRoleTag] = useState(song.roleTag ?? "");
+  const [musicalKey, setMusicalKey] = useState(song.musicalKey ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,13 @@ export default function SongEditor({ song }: Props) {
       const res = await fetch(`/api/songs/${song.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ titleKo, tempo, mood: mood || null, roleTag: roleTag || null }),
+        body: JSON.stringify({
+          titleKo,
+          tempo,
+          mood: mood || null,
+          roleTag: roleTag || null,
+          musicalKey: musicalKey || null,
+        }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "수정에 실패했어요");
       setEditing(false);
@@ -78,19 +86,30 @@ export default function SongEditor({ song }: Props) {
             className="w-full border border-line rounded-lg px-3.5 py-2.5 text-sm bg-paper-raised focus:outline-none focus:ring-2 focus:ring-accent-soft focus:border-accent"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1.5">템포</label>
-          <select
-            value={tempo}
-            onChange={(e) => setTempo(e.target.value)}
-            className="w-full border border-line rounded-lg px-3.5 py-2.5 text-sm bg-paper-raised focus:outline-none focus:ring-2 focus:ring-accent-soft focus:border-accent"
-          >
-            {Object.entries(TEMPO_LABEL).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">템포</label>
+            <select
+              value={tempo}
+              onChange={(e) => setTempo(e.target.value)}
+              className="w-full border border-line rounded-lg px-3.5 py-2.5 text-sm bg-paper-raised focus:outline-none focus:ring-2 focus:ring-accent-soft focus:border-accent"
+            >
+              {Object.entries(TEMPO_LABEL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">키</label>
+            <input
+              value={musicalKey}
+              onChange={(e) => setMusicalKey(e.target.value)}
+              placeholder="예: G, D, Capo3 Am"
+              className="w-full border border-line rounded-lg px-3.5 py-2.5 text-sm bg-paper-raised focus:outline-none focus:ring-2 focus:ring-accent-soft focus:border-accent"
+            />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">카테고리 (분위기)</label>
@@ -136,6 +155,7 @@ export default function SongEditor({ song }: Props) {
                 setTempo(song.tempo);
                 setMood(song.mood ?? "");
                 setRoleTag(song.roleTag ?? "");
+                setMusicalKey(song.musicalKey ?? "");
                 setError(null);
               }}
               className="flex items-center gap-1.5 bg-accent-soft text-ink-soft px-4 py-2 rounded-lg text-sm font-medium"
@@ -173,6 +193,9 @@ export default function SongEditor({ song }: Props) {
         <span className="text-xs px-2 py-0.5 rounded-full bg-accent-soft text-accent">
           {TEMPO_LABEL[song.tempo] ?? song.tempo}
         </span>
+        {song.musicalKey && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-ink text-white">Key: {song.musicalKey}</span>
+        )}
         {song.mood && <span className="text-xs px-2 py-0.5 rounded-full bg-gold-soft text-gold">{song.mood}</span>}
         {song.roleTag && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-accent text-white">{song.roleTag}</span>

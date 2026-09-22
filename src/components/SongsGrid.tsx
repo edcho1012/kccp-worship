@@ -18,6 +18,7 @@ export type SongForGrid = {
   tempo: string;
   mood: string | null;
   roleTag: string | null;
+  musicalKey: string | null;
   count: number;
 };
 
@@ -209,13 +210,18 @@ export default function SongsGrid({ songs }: { songs: SongForGrid[] }) {
                             </span>
                           )}
                           <div className="truncate pr-5">{song.titleKo}</div>
-                          <div className="mt-1">
+                          <div className="mt-1 flex items-center gap-1 flex-wrap">
                             {song.roleTag ? (
                               <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-accent text-white">
                                 {song.roleTag}
                               </span>
                             ) : (
                               <span className="text-xs text-ink-soft">{song.count}회</span>
+                            )}
+                            {song.musicalKey && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-ink text-white">
+                                {song.musicalKey}
+                              </span>
                             )}
                           </div>
                           {song.mood && (
