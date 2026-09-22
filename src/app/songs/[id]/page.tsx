@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import SongEditor from "@/components/SongEditor";
+import SongHistoryList from "@/components/SongHistoryList";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,20 @@ export default async function SongDetailPage({ params }: { params: Promise<{ id:
 
   if (!song) return <div className="max-w-xl mx-auto px-6 py-12">곡을 찾을 수 없어요.</div>;
 
+  const distinctKeys = Array.from(
+    new Set(song.setlistSongs.map((ss) => ss.musicalKey).filter((k): k is string => !!k))
+  );
+
+  const historyItems = song.setlistSongs.map((ss) => ({
+    id: ss.id,
+    setlistId: ss.setlist.id,
+    date: ss.setlist.date ? ss.setlist.date.toISOString() : null,
+    title: ss.setlist.title,
+    fileUrl: ss.setlist.fileUrl,
+    pageNumber: ss.pageNumber,
+    musicalKey: ss.musicalKey,
+  }));
+
   return (
     <div className="max-w-xl mx-auto px-6 py-12">
       <Link href="/songs" className="inline-flex items-center gap-1.5 text-sm text-ink-soft mb-6">
@@ -29,33 +44,16 @@ export default async function SongDetailPage({ params }: { params: Promise<{ id:
 
       <SongEditor song={song} />
 
+      {distinctKeys.length > 1 && (
+        <p className="text-xs text-gold mb-4">
+          이 곡은 주마다 다른 키로 쓰였어: {distinctKeys.join(", ")}
+        </p>
+      )}
+
       <h2 className="text-sm font-medium text-ink-soft mb-3">
         사용 이력 ({song.setlistSongs.length}회)
       </h2>
-      <ul className="space-y-2">
-        {song.setlistSongs.map((ss) => (
-          <li
-            key={ss.id}
-            className="flex items-center justify-between border border-line bg-paper-raised rounded-lg px-4 py-3 text-sm"
-          >
-            <span>
-              {ss.setlist.date ? ss.setlist.date.toISOString().slice(0, 10) : "날짜 미정"}
-              {ss.setlist.title && <span className="text-ink-soft ml-2">{ss.setlist.title}</span>}
-            </span>
-            {ss.setlist.fileUrl && (
-              <a
-                href={ss.pageNumber ? `${ss.setlist.fileUrl}#page=${ss.pageNumber}` : ss.setlist.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-accent hover:underline shrink-0"
-              >
-                <FileText size={14} strokeWidth={2} />
-                악보 보기
-              </a>
-            )}
-          </li>
-        ))}
-      </ul>
+      <SongHistoryList items={historyItems} />
     </div>
   );
 }

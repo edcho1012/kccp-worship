@@ -85,7 +85,8 @@ export async function POST(req: NextRequest) {
                       const rawPage = entry.songs[idx]?.page;
                       // 조각 안에서의 페이지 번호를 원본 파일 기준 페이지 번호로 환산
                       const pageNumber = rawPage != null ? chunk.startPage + (rawPage - 1) : null;
-                      return { songId: s.id, pageNumber };
+                      const musicalKey = entry.songs[idx]?.key ?? null;
+                      return { songId: s.id, pageNumber, musicalKey };
                     })
                     // 한 주 안에서 같은 곡이 두 번 이상 나오면(같은 찬양을 두 번 부른 경우) DB 유일성 제약 때문에 첫 번만 남기고 걸러냄
                     .filter((item, idx, arr) => arr.findIndex((x) => x.songId === item.songId) === idx)

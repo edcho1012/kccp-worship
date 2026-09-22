@@ -82,7 +82,11 @@ export async function POST(req: NextRequest) {
         fileUrl,
         songs: {
           create: songs
-            .map((song, i) => ({ songId: song.id, pageNumber: extracted.songs[i]?.page ?? null }))
+            .map((song, i) => ({
+              songId: song.id,
+              pageNumber: extracted.songs[i]?.page ?? null,
+              musicalKey: extracted.songs[i]?.key ?? null,
+            }))
             // 한 주 안에서 같은 곡이 두 번 이상 나오리 (같은 찬양을 두 번 부마리) DB 유일성 제약 때문에 첫 번만 남기고 걸리마리
             .filter((item, i, arr) => arr.findIndex((x) => x.songId === item.songId) === i)
             .map((item, i) => ({ ...item, order: i })),

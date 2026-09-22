@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDownAZ, ListOrdered, CheckSquare, Square, X } from "lucide-react";
+import { ArrowDownAZ, ListOrdered, CheckSquare, Square, X, Search } from "lucide-react";
 
 const TEMPO_OPTIONS: { key: string; label: string }[] = [
   { key: "HIGH", label: "High" },
@@ -32,6 +32,7 @@ export default function SongsGrid({ songs }: { songs: SongForGrid[] }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkTempo, setBulkTempo] = useState("HIGH");
   const [applying, setApplying] = useState(false);
+  const [search, setSearch] = useState("");
 
   function toggleTempoFilter(key: string) {
     setTempoFilter((prev) => {
@@ -51,17 +52,21 @@ export default function SongsGrid({ songs }: { songs: SongForGrid[] }) {
     });
   }
 
-  // 필터에서 선택된 템포만, 각각 그룹으로 묶어서 정렬
+  // 검색어 + 필터에서 선택된 템포만, 각각 그룹으로 묶어서 정렬
   const groups = useMemo(() => {
+    const q = search.trim().toLowerCase();
     return TEMPO_OPTIONS.filter((t) => tempoFilter.has(t.key)).map((t) => ({
       ...t,
       songs: songs
         .filter((s) => s.tempo === t.key)
+        .filter((s) => (q ? s.titleKo.toLowerCase().includes(q) : true))
         .sort((a, b) =>
           sortBy === "alpha" ? a.titleKo.localeCompare(b.titleKo, "ko") : b.count - a.count
         ),
     }));
-  }, [songs, tempoFilter, sortBy]);
+  }, [songs, tempoFilter, sortBy, search]);
+
+  const totalMatches = groups.reduce((sum, g) => sum + g.songs.length, 0);
 
   async function applyBulkTempo() {
     if (selectedIds.size === 0) return;
@@ -85,6 +90,17 @@ export default function SongsGrid({ songs }: { songs: SongForGrid[] }) {
 
   return (
     <div className="space-y-6">
+      {/* 검색 */}
+      <div className="relative max-w-sm">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" strokeWidth={2} />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="곡 제목으로 검색..."
+          className="w-full border border-line rounded-lg pl-9 pr-3 py-2 text-sm bg-paper-raised focus:outline-none focus:ring-2 focus:ring-accent-soft focus:border-accent"
+        />
+      </div>
+
       {/* 필터 + 정렬 + 선택 모드 */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-ink-soft mr-1">템포:</span>
@@ -140,6 +156,10 @@ export default function SongsGrid({ songs }: { songs: SongForGrid[] }) {
         </button>
       </div>
 
+      {search.trim() && (
+        <p className="text-xs text-ink-soft">"{search.trim()}" 검색 결과 {totalMatches}곡</p>
+      )}
+
       {/* 선택 모드일 때 일괄 변경 바 */}
       {selectMode && (
         <div className="rounded-lg border border-line bg-paper-raised p-3 flex items-center gap-3 text-sm">
@@ -174,7 +194,7 @@ export default function SongsGrid({ songs }: { songs: SongForGrid[] }) {
         </div>
       )}
 
-      {/* 곡 그리드: 템포별로 묶어서, 필터에서 선택된 것만 */}
+      {/* 곡 그리드: 템포별로 묶어서, 필터+검색에서 선택된 것만 */}
       {groups.length > 0 ? (
         <div className="space-y-8">
           {groups.map((group) => (
@@ -235,7 +255,7 @@ export default function SongsGrid({ songs }: { songs: SongForGrid[] }) {
                   })}
                 </ul>
               ) : (
-                <p className="text-sm text-ink-soft">아직 없어요.</p>
+                <p className="text-sm text-ink-soft">없어요.</p>
               )}
             </div>
           ))}
